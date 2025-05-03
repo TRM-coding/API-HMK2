@@ -1,5 +1,5 @@
 import os
-from flask import Flask
+from flask import Flask, jsonify
 from .config import config_by_name
 from .extensions import db, migrate
 from .routes import offers_bp, tasks_bp, stats_logs_bp
@@ -25,5 +25,10 @@ def create_app(config_name=None):
     app.register_blueprint(offers_bp,   url_prefix='/offers')
     app.register_blueprint(tasks_bp,    url_prefix='/tasks')
     app.register_blueprint(stats_logs_bp, url_prefix='/stats_logs')
+
+    # Add error handler to return JSON for 404 errors.
+    @app.errorhandler(404)
+    def not_found(e):
+        return jsonify({"error": "not found"}), 404
 
     return app

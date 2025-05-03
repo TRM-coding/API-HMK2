@@ -49,15 +49,21 @@ def test_list_offers(client):
     rv = client.get('/offers')
     assert rv.status_code == 200
     data = rv.get_json()
-    assert isinstance(data, list) and len(data) == 4
-    for o in data:
-        # 确保关键字段都在
+    assert isinstance(data, dict)
+    # 分页主体
+    assert 'items' in data and isinstance(data['items'], list)
+    assert data['total'] == 4
+    assert data['page'] == 1
+    assert data['per_page'] == 10
+    assert data['pages'] == 1
+    items = data['items']
+    assert len(items) == 4
+    for o in items:
         assert 'company_name' in o
         assert 'position' in o
         assert 'currency' in o
         assert 'tags' in o
         assert 'created_at' in o
-
-    names = [o['company_name'] for o in data]
+    names = [o['company_name'] for o in items]
     for name in ['TechCorp','HealthPlus','EduFuture','GlobalLink']:
         assert name in names

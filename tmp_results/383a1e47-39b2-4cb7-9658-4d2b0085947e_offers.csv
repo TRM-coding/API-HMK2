@@ -1,0 +1,3 @@
+company_name,position,salary_min,salary_max,currency,location,description,tags
+CorpA,Dev,1000,2000,CNY,Beijing,DescA,"[""Tag1"",""Tag2""]"
+CorpB,QA,1500,2500,CNY,Shanghai,DescB,"[""Tag3""]"

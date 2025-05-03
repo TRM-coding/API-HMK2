@@ -21,9 +21,15 @@ def get_stats(log_id):
 @stats_logs_bp.route('', methods=['POST'])
 def create_stats():
     data = request.get_json()
-    # parse ISO date string into a date object for SQLite
     if 'date' in data and isinstance(data['date'], str):
         data['date'] = date.fromisoformat(data['date'])
+    # Check for an existing record with the same date to avoid duplicates.
+    existing = StatsLog.query.filter_by(date=data['date']).first()
+    if existing:
+        for k, v in data.items():
+            setattr(existing, k, v)
+        db.session.commit()
+        return jsonify(to_dict(existing)), 200
     l = StatsLog(**data)
     db.session.add(l)
     db.session.commit()

@@ -1,7 +1,7 @@
 from .extensions import celery, db
-from .models import ImportExportTask, TaskStatus
+from .models import ImportExportTask, TaskStatus, ImportExportType, Offer  # add Offer, ImportExportType
 from flask import current_app, has_app_context
-import os, shutil, time
+import os, shutil, time, csv, json  # add csv, json
 
 @celery.task(name='app.tasks.process_import_export')
 def process_import_export(task_id):
@@ -33,6 +33,41 @@ def process_import_export(task_id):
             )
             shutil.copy(src, dest)
             t.result_url = dest
+
+            # 新增：如果是 IMPORT 类型，解析 CSV 并写入 Offer 表
+            if t.type == ImportExportType.IMPORT:
+                with open(dest, newline='', encoding='utf-8') as f:
+                    reader = csv.DictReader(f)
+                    offers = []
+                    for row in reader:
+                        raw_tags = row.get('tags', '[]').strip()
+                        if not raw_tags:
+                            tags = []
+                        else:
+                            # If raw_tags does not start with '[' assume extra quotes are present.
+                            if not raw_tags.startswith('['):
+                                raw_tags = raw_tags.strip('"')
+                            try:
+                                tags = json.loads(raw_tags)
+                            except json.JSONDecodeError:
+                                # As a fallback, decode escape sequences and try again.
+                                try:
+                                    raw_tags_decoded = raw_tags.encode('utf-8').decode('unicode_escape')
+                                    tags = json.loads(raw_tags_decoded)
+                                except Exception:
+                                    tags = []
+                        offers.append(Offer(
+                            company_name=row['company_name'],
+                            position=row['position'],
+                            salary_min=row.get('salary_min') or None,
+                            salary_max=row.get('salary_max') or None,
+                            currency=row.get('currency') or None,
+                            location=row.get('location') or None,
+                            description=row.get('description') or None,
+                            tags=tags
+                        ))
+                    if offers:
+                        db.session.add_all(offers)
             t.status = TaskStatus.SUCCESS
         else:
             t.status = TaskStatus.FAIL

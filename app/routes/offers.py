@@ -7,8 +7,22 @@ offers_bp = Blueprint('offers', __name__)
 
 @offers_bp.route('', methods=['GET'])
 def list_offers():
-    offers = Offer.query.all()
-    return jsonify([to_dict(o) for o in offers])
+    # 新增：支持部分检索和分页
+    q = request.args.get('q', type=str)
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    query = Offer.query
+    if q:
+        query = query.filter(Offer.company_name.ilike(f'%{q}%'))
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    items = [to_dict(o) for o in pagination.items]
+    return jsonify({
+        'items': items,
+        'total': pagination.total,
+        'page': pagination.page,
+        'per_page': pagination.per_page,
+        'pages': pagination.pages
+    })
 
 @offers_bp.route('/<int:offer_id>', methods=['GET'])
 def get_offer(offer_id):
