@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+
+# Environment
+.env
+
+# Migrations
+migrations/
+
+# Virtualenv
+venv/
+
+/uploads/
+/results/
+.pytest_cache/
