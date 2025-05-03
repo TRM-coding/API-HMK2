@@ -1,2 +1,0 @@
-company_name,position,salary_min,salary_max,currency,location,description,tags
-DemoCorp,DemoDev,1000,2000,CNY,Beijing,"Demo description","["DemoTag"]"
