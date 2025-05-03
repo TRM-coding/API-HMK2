@@ -74,6 +74,17 @@ def search_offers():
     r = requests.get(f"{BASE_URL}/offers", params=params)
     print(r.status_code, json.dumps(r.json(), indent=2))
 
+def bulk_delete_offers():
+    # 批量删除指定 offer（输入逗号分隔的 ID 列表）
+    ids_input = input("Offer IDs to delete (comma separated): ")
+    try:
+        ids = [int(i.strip()) for i in ids_input.split(",") if i.strip()]
+    except ValueError:
+        print("Invalid input, please enter integers separated by commas")
+        return
+    r = requests.delete(f"{BASE_URL}/offers", json={'ids': ids})
+    print(r.status_code)
+
 # -- task endpoints --
 def list_tasks():
     # GET /tasks
@@ -178,6 +189,7 @@ def main():
         '13':("Update stats_log", update_stats),
         '14':("Delete stats_log", delete_stats),
         '15':("Search offers", search_offers),  # 新增：搜索招聘信息功能
+        '16':("Bulk delete offers", bulk_delete_offers),   # 新增批量删除
         'q':("Quit", None)
     }
     while True:

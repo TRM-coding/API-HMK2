@@ -3,6 +3,9 @@ import os
 import json
 import requests
 import time
+import csv
+from app import create_app, db
+from app.models import Offer
 
 # Base URL for the API (can be overridden by setting API_BASE_URL environment variable)
 BASE_URL = os.environ.get('API_BASE_URL', 'http://127.0.0.1:5000')
@@ -59,6 +62,19 @@ def demo_delete_offer(offer_id):
     url = f"{BASE_URL}/offers/{offer_id}"
     r = requests.delete(url)
     print("Delete offer response:", r.status_code)
+
+def demo_bulk_delete_offers(ids):
+    print("\nTask: Bulk Delete Offers")
+    url = f"{BASE_URL}/offers"
+    r = requests.delete(url, json={'ids': ids})
+    print("Bulk delete response:", r.status_code)
+
+def demo_list_offers():
+    print("\nTask: List Offers")
+    url = f"{BASE_URL}/offers"
+    r = requests.get(url)
+    print("List offers response:", r.status_code, r.text)
+    return r.json()
 
 # --- Task operations ---
 def demo_list_tasks():
@@ -287,7 +303,31 @@ def main():
     print_footer("搜索 Offer (预期成功)")
     demo_search_offers("SearchableOffer")
 
+    # 新增：批量删除示例
+    print_footer("批量删除 Offers")
+    # 展示系统中当前的 Offers
+    print("\n系统中当前的 Offers：")
+    demo_list_offers()
+    # 获取当前所有 Offer ID 列表
+    
+    url_offers = f"{BASE_URL}/offers"
+    r_all = requests.get(url_offers)
+    all_data = r_all.json()
+    ids = [o['id'] for o in all_data.get('items', [])]
+    if len(ids) >= 2:
+        demo_bulk_delete_offers(ids[:2])
+        print("Deleted offers:", ids[:2])
+    else:
+        print("Not enough offers for bulk delete demo")
+    # 列表展示剩余
+    demo_list_offers()
+
     wait_enter("所有操作执行完毕，按 Enter 退出 demo.")
+
+   
+
+
+
 
 if __name__ == "__main__":
     main()

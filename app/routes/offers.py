@@ -51,6 +51,18 @@ def update_offer(offer_id):
     db.session.commit()
     return jsonify(to_dict(o))
 
+@offers_bp.route('', methods=['DELETE'])
+def bulk_delete_offers():
+    data = request.get_json() or {}
+    ids = data.get('ids')
+    if not isinstance(ids, list):
+        return jsonify({'error': 'ids must be a list'}), 400
+    offers = Offer.query.filter(Offer.id.in_(ids)).all()
+    for o in offers:
+        db.session.delete(o)
+    db.session.commit()
+    return '', 204
+
 @offers_bp.route('/<int:offer_id>', methods=['DELETE'])
 def delete_offer(offer_id):
     o = db.session.get(Offer, offer_id)
